@@ -19,22 +19,24 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
   const router = useRouter();
   const params = useSearchParams();
 
+  // This defines a function named "handleClick" using the "useCallback" hook, which memoizes the function so that it only re-renders if its dependencies change
   const handleClick = useCallback(() => {
+    // This initializes a "currentQuery" object
     let currentQuery = {};
-
+    // This checks if the "params" object is defined (presumably from a URL search parameter) and parses it into an object using the "qs.parse" method
     if (params) {
       currentQuery = qs.parse(params.toString());
     }
-
+    // This initializes an "updatedQuery" object by copying the "currentQuery" object and adding or removing the "category" key/value based on the "label" parameter
     const updatedQuery: any = {
       ...currentQuery,
       category: label,
     };
-
+    //This check ensures that if the user clicks on a category box that is already selected, the "category" parameter is removed from the URL search parameters. This effectively clears the category filter and displays all items in the list
     if (params?.get("category") === label) {
       delete updatedQuery.category;
     }
-
+    // This creates a URL string using the "qs.stringifyUrl" method with the updated query parameters and sets it as the new route using the "router.push" method
     const url = qs.stringifyUrl(
       {
         url: "/",
