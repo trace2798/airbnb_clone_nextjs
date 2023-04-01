@@ -1,5 +1,10 @@
-import axios from 'axios';
+import { PrismaClient } from "@prisma/client";
 
-const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+declare global {
+  var prisma: PrismaClient | undefined;
+}
 
-export default fetcher;
+const client = globalThis.prisma || new PrismaClient();
+if (process.env.NODE_ENV !== "production") globalThis.prisma = client;
+
+export default client;
