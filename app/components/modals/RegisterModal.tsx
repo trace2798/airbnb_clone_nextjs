@@ -39,7 +39,7 @@ const RegisterModal = () => {
         //   loginModal.onOpen();
       })
       .catch((error) => {
-        toast.error(error);
+        toast.error("Something went wrong");
       })
       .finally(() => {
         setIsLoading(false);
@@ -115,7 +115,6 @@ const RegisterModal = () => {
               hover:underline
             "
           >
-            {" "}
             Log in
           </span>
         </p>
