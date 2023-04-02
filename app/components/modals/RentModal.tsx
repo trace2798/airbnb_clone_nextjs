@@ -7,6 +7,8 @@ import Heading from "../Heading";
 import { categories } from "../navbar/Categories";
 import CategoryInput from "../inputs/CategoryInput";
 import { FieldValues, useForm } from "react-hook-form";
+import CountrySelect from "../inputs/CountrySelect";
+import dynamic from "next/dynamic";
 
 // enum can be used to represent a sequence of steps in a form or a wizard. By assigning a numeric value to each step, the code can easily keep track of the current step and navigate to the next or previous step
 enum STEPS {
@@ -55,9 +57,17 @@ const RentModal = () => {
   const bathroomCount = watch("bathroomCount");
   const imageSrc = watch("imageSrc");
 
-  //   const Map = useMemo(() => dynamic(() => import('../Map'), {
-  //     ssr: false
-  //   }), [location]);
+  //useMemo is a hook provided by React that allows you to memoize a value (i.e. store a cached version of a value) and only recalculate it when one of its dependencies changes.
+  //the value being memoized is a dynamically loaded version of the Map component from the ../Map file, which is loaded asynchronously using the dynamic function from the next/dynamic package.
+  const Map = useMemo(
+    () =>
+      dynamic(() => import("../Map"), {
+        // The ssr option is set to false to prevent the component from being rendered on the server side.
+        ssr: false,
+      }),
+    //The dependency array includes a single value, location, which means that the Map component will be reloaded whenever the location value changes. This ensures that the component always displays the correct location on the map.
+    [location]
+  );
 
   //defines a function setCustomValue that can be used to programmatically set the value of a form input using the setValue function provided by the react-hook-form library. Takes two arguments id and value.
   const setCustomValue = (id: string, value: any) => {
@@ -140,7 +150,12 @@ const RentModal = () => {
           title="Where is your place located?"
           subtitle="Help guests find you!"
         />
-        
+        <CountrySelect
+          value={location}
+          onChange={(value) => setCustomValue("location", value)}
+        />
+        {/* Map needs to be imported in a specific way since it is not supported in react. So we need to do some acrobatics.  */}
+        <Map center={location?.latlng} />
       </div>
     );
   }
