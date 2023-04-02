@@ -6,11 +6,15 @@ import useRentModal from "@/app/hooks/useRentModal";
 import Heading from "../Heading";
 import { categories } from "../navbar/Categories";
 import CategoryInput from "../inputs/CategoryInput";
-import { FieldValues, useForm } from "react-hook-form";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import CountrySelect from "../inputs/CountrySelect";
 import dynamic from "next/dynamic";
 import Counter from "../inputs/Counter";
 import ImageUpload from "../inputs/ImageUpload";
+import Input from "../inputs/Input";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 // enum can be used to represent a sequence of steps in a form or a wizard. By assigning a numeric value to each step, the code can easily keep track of the current step and navigate to the next or previous step
 enum STEPS {
@@ -28,6 +32,10 @@ const RentModal = () => {
   // By setting the initial value of step to STEPS.CATEGORY, the code is indicating that the form should start at the first step (i.e., the "category" step).
   // When the setStep function is called, React will automatically re-render the component to reflect the updated state.
   const [step, setStep] = useState(STEPS.CATEGORY);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
 
   //declares several variables using destructuring assignment from the return value of the useForm hook provided by the react-hook-form library
   const {
@@ -92,6 +100,39 @@ const RentModal = () => {
   //onNext function is used to go to the next step. The function takes the current value of step as an argument and returns a new value that is one more than the current value.
   const onNext = () => {
     setStep((value) => value + 1);
+  };
+
+  //onSubmit function serves as the callback function for when the user submits the form.
+  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+    //If the current form step is STEPS.PRICE, the function sets the isLoading state to true, indicating that a network request is in progress.
+    if (step !== STEPS.PRICE) {
+      return onNext();
+    }
+    setIsLoading(true);
+    //If the POST request is successful, the function displays a success message
+    axios
+      //makes a POST request to the /api/listings endpoint with the form data as the payload.
+      .post("/api/listings", data)
+      .then(() => {
+        //POST request is successful, the function displays a success message
+        toast.success("Listing created!");
+        //router.refresh() is a custom method used to refresh the current page. (It can be useful in situations where you want to refresh the page's content without navigating to a different page.)
+        router.refresh();
+        //resets the form with the reset function from react-hook-form
+        reset();
+        // sets the form step back to STEPS.CATEGORY
+        setStep(STEPS.CATEGORY);
+        // closes the modal window
+        rentModal.onClose();
+      })
+      .catch(() => {
+        //If the POST request fails, the function displays an error message to the user using the toast.error function.
+        toast.error("Something went wrong.");
+      })
+      //regardless of whether the POST request succeeds or fails, the function sets the isLoading state back to false, indicating that the network request has completed.
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   //The function passed to useMemo in this code checks the value of the step variable and returns either the string 'Create' or 'Next', depending on whether step is equal to STEPS.PRICE or not.
@@ -169,28 +210,28 @@ const RentModal = () => {
           title="Share some basics about your place"
           subtitle="What amenities do you have?"
         />
-        <Counter 
-          onChange={(value) => setCustomValue('guestCount', value)}
+        <Counter
+          onChange={(value) => setCustomValue("guestCount", value)}
           value={guestCount}
-          title="Guests" 
+          title="Guests"
           subtitle="How many guests do you allow?"
         />
         <hr />
-        <Counter 
-          onChange={(value) => setCustomValue('roomCount', value)}
+        <Counter
+          onChange={(value) => setCustomValue("roomCount", value)}
           value={roomCount}
-          title="Rooms" 
+          title="Rooms"
           subtitle="How many rooms do you have?"
         />
         <hr />
-        <Counter 
-          onChange={(value) => setCustomValue('bathroomCount', value)}
+        <Counter
+          onChange={(value) => setCustomValue("bathroomCount", value)}
           value={bathroomCount}
-          title="Bathrooms" 
+          title="Bathrooms"
           subtitle="How many bathrooms do you have?"
         />
       </div>
-    )
+    );
   }
 
   if (step === STEPS.IMAGES) {
@@ -201,11 +242,60 @@ const RentModal = () => {
           subtitle="Show guests what your place looks like!"
         />
         <ImageUpload
-          onChange={(value) => setCustomValue('imageSrc', value)}
+          onChange={(value) => setCustomValue("imageSrc", value)}
           value={imageSrc}
         />
       </div>
-    )
+    );
+  }
+
+  if (step === STEPS.DESCRIPTION) {
+    bodyContent = (
+      <div className="flex flex-col gap-8">
+        <Heading
+          title="How would you describe your place?"
+          subtitle="A brief description of your place"
+        />
+        <Input
+          id="title"
+          label="Title"
+          disabled={isLoading}
+          register={register}
+          errors={errors}
+          required
+        />
+        <hr />
+        <Input
+          id="description"
+          label="Description"
+          disabled={isLoading}
+          register={register}
+          errors={errors}
+          required
+        />
+      </div>
+    );
+  }
+
+  if (step === STEPS.PRICE) {
+    bodyContent = (
+      <div className="flex flex-col gap-8">
+        <Heading
+          title="Now, set your price"
+          subtitle="How much do you charge per night?"
+        />
+        <Input
+          id="price"
+          label="Price"
+          formatPrice
+          type="number"
+          disabled={isLoading}
+          register={register}
+          errors={errors}
+          required
+        />
+      </div>
+    );
   }
 
   return (
