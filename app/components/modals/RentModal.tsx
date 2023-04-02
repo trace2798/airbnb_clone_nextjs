@@ -10,6 +10,7 @@ import { FieldValues, useForm } from "react-hook-form";
 import CountrySelect from "../inputs/CountrySelect";
 import dynamic from "next/dynamic";
 import Counter from "../inputs/Counter";
+import ImageUpload from "../inputs/ImageUpload";
 
 // enum can be used to represent a sequence of steps in a form or a wizard. By assigning a numeric value to each step, the code can easily keep track of the current step and navigate to the next or previous step
 enum STEPS {
@@ -187,6 +188,21 @@ const RentModal = () => {
           value={bathroomCount}
           title="Bathrooms" 
           subtitle="How many bathrooms do you have?"
+        />
+      </div>
+    )
+  }
+
+  if (step === STEPS.IMAGES) {
+    bodyContent = (
+      <div className="flex flex-col gap-8">
+        <Heading
+          title="Add a photo of your place"
+          subtitle="Show guests what your place looks like!"
+        />
+        <ImageUpload
+          onChange={(value) => setCustomValue('imageSrc', value)}
+          value={imageSrc}
         />
       </div>
     )
